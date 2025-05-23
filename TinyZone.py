@@ -50,7 +50,7 @@ def open_in_default_browser(url):
 
 def check_cloudnestra_play_button(driver, url, headless=True):
     """Check if play button exists on cloudnestra.com page and click it if found."""
-    # Reset the found_m3u8 flags
+    # Reset the found_m3u8 flag
     check_cloudnestra_play_button.found_m3u8 = False
     check_cloudnestra_play_button.m3u8_urls = set()  # Store m3u8 URLs
     
