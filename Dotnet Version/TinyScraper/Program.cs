@@ -191,10 +191,12 @@ namespace TinyScraper
                             await Task.Delay(1000);
 
                             // Try different click methods
+                            bool clicked = false;
                             try
                             {
                                 playElement.Click();
                                 Log.Information("Successfully clicked using direct click");
+                                clicked = true;
                             }
                             catch
                             {
@@ -202,116 +204,139 @@ namespace TinyScraper
                                 {
                                     ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", playElement);
                                     Log.Information("Successfully clicked using JavaScript");
+                                    clicked = true;
                                 }
                                 catch
                                 {
-                                    new Actions(driver).MoveToElement(playElement).Click().Perform();
-                                    Log.Information("Successfully clicked using Action Chains");
+                                    try
+                                    {
+                                        new Actions(driver).MoveToElement(playElement).Click().Perform();
+                                        Log.Information("Successfully clicked using Action Chains");
+                                        clicked = true;
+                                    }
+                                    catch
+                                    {
+                                        Log.Error("Failed to click using any method");
+                                    }
                                 }
                             }
 
-                            // Monitor network traffic
-                            var networkMonitor = new NetworkMonitor(driver);
-                            await networkMonitor.MonitorNetworkTraffic();
-
-                            // Get cloudnestra URLs
-                            var cloudnestraUrls = networkMonitor.GetCloudnestraUrls().ToList();
-                            if (cloudnestraUrls.Any())
+                            if (clicked)
                             {
-                                Log.Information("\nFound cloudnestra URLs:");
-                                var firstUrl = cloudnestraUrls.First();
-                                Log.Information($"Visiting first cloudnestra URL: {firstUrl}");
+                                // Monitor network traffic for cloudnestra URLs only
+                                var networkMonitor = new NetworkMonitor(driver);
+                                await networkMonitor.MonitorNetworkTraffic(searchForM3u8: false);
 
-                                // Navigate to the cloudnestra URL
-                                driver.Navigate().GoToUrl(firstUrl);
-                                await Task.Delay(15000); // Wait for page load like Python code
-
-                                // Wait for the play button
-                                var cloudnestraWait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                                try
+                                // Get cloudnestra URLs
+                                var cloudnestraUrls = networkMonitor.GetCloudnestraUrls().ToList();
+                                if (cloudnestraUrls.Any())
                                 {
-                                    var playButton = cloudnestraWait.Until(d => d.FindElement(By.CssSelector("#pl_but.fas.fa-play")));
-                                    Log.Information("Found play button on cloudnestra page!");
+                                    Log.Information("\nFound cloudnestra URLs:");
+                                    var firstUrl = cloudnestraUrls.First();
+                                    Log.Information($"Visiting first cloudnestra URL: {firstUrl}");
 
-                                    // Try to click the play button
+                                    // Navigate to the cloudnestra URL
+                                    driver.Navigate().GoToUrl(firstUrl);
+                                    await Task.Delay(15000); // Wait for page load like Python code
+
+                                    // Wait for the play button
+                                    var cloudnestraWait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
                                     try
                                     {
-                                        // Scroll the element into view
-                                        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", playButton);
-                                        await Task.Delay(1000); // Wait for scroll to complete
+                                        var playButton = cloudnestraWait.Until(d => d.FindElement(By.CssSelector("#pl_but.fas.fa-play")));
+                                        Log.Information("Found play button on cloudnestra page!");
 
-                                        // Try different click methods
+                                        // Try to click the play button
                                         try
                                         {
-                                            // Method 1: Direct click
-                                            playButton.Click();
-                                            Log.Information("Successfully clicked play button using direct click");
-                                        }
-                                        catch
-                                        {
+                                            // Scroll the element into view
+                                            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", playButton);
+                                            await Task.Delay(1000);
+
+                                            // Try different click methods
+                                            bool cloudnestraClicked = false;
                                             try
                                             {
-                                                // Method 2: JavaScript click
-                                                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", playButton);
-                                                Log.Information("Successfully clicked play button using JavaScript");
+                                                playButton.Click();
+                                                Log.Information("Successfully clicked play button using direct click");
+                                                cloudnestraClicked = true;
                                             }
                                             catch
                                             {
-                                                // Method 3: Action Chains
-                                                new Actions(driver).MoveToElement(playButton).Click().Perform();
-                                                Log.Information("Successfully clicked play button using Action Chains");
+                                                try
+                                                {
+                                                    ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", playButton);
+                                                    Log.Information("Successfully clicked play button using JavaScript");
+                                                    cloudnestraClicked = true;
+                                                }
+                                                catch
+                                                {
+                                                    try
+                                                    {
+                                                        new Actions(driver).MoveToElement(playButton).Click().Perform();
+                                                        Log.Information("Successfully clicked play button using Action Chains");
+                                                        cloudnestraClicked = true;
+                                                    }
+                                                    catch
+                                                    {
+                                                        Log.Error("Failed to click play button using any method");
+                                                    }
+                                                }
+                                            }
+
+                                            if (cloudnestraClicked)
+                                            {
+                                                // Wait for any new requests after clicking
+                                                await Task.Delay(5000);
+
+                                                // Now monitor network traffic for m3u8 URLs
+                                                await networkMonitor.MonitorNetworkTraffic(searchForM3u8: true);
+
+                                                // Get m3u8 URLs
+                                                var m3u8Urls = networkMonitor.GetM3u8Urls().ToList();
+                                                if (m3u8Urls.Any())
+                                                {
+                                                    Log.Information("\nFound m3u8 URLs:");
+                                                    foreach (var m3u8Url in m3u8Urls)
+                                                    {
+                                                        Log.Information($"- {m3u8Url}");
+                                                    }
+
+                                                    // Store m3u8 URLs
+                                                    Program.m3u8Urls.UnionWith(new HashSet<string>(m3u8Urls));
+
+                                                    // Try playing in VLC if requested
+                                                    if (tryVlc)
+                                                    {
+                                                        await VideoPlayer.TryPlayInVlc(m3u8Urls);
+                                                    }
+
+                                                    // Try playing in FFplay if requested
+                                                    if (tryFfplay)
+                                                    {
+                                                        await VideoPlayer.TryPlayInFfplay(m3u8Urls, watchFfplay);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Log.Information("No m3u8 URLs found after clicking play button");
+                                                }
                                             }
                                         }
-
-                                        // Wait for any new requests after clicking
-                                        await Task.Delay(5000);
-
-                                        // Monitor network traffic again
-                                        await networkMonitor.MonitorNetworkTraffic();
-
-                                        // Get m3u8 URLs
-                                        var m3u8Urls = networkMonitor.GetM3u8Urls().ToList();
-                                        if (m3u8Urls.Any())
+                                        catch (Exception ex)
                                         {
-                                            Log.Information("\nFound m3u8 URLs:");
-                                            foreach (var m3u8Url in m3u8Urls)
-                                            {
-                                                Log.Information($"- {m3u8Url}");
-                                            }
-
-                                            // Store m3u8 URLs
-                                            Program.m3u8Urls.UnionWith(new HashSet<string>(m3u8Urls));
-
-                                            // Try playing in VLC if requested
-                                            if (tryVlc)
-                                            {
-                                                await VideoPlayer.TryPlayInVlc(m3u8Urls);
-                                            }
-
-                                            // Try playing in FFplay if requested
-                                            if (tryFfplay)
-                                            {
-                                                await VideoPlayer.TryPlayInFfplay(m3u8Urls, watchFfplay);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Log.Information("No m3u8 URLs found after clicking play button");
+                                            Log.Error(ex, "Failed to click play button");
                                         }
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
-                                        Log.Error(ex, "Failed to click play button");
+                                        Log.Information("No play button found on cloudnestra page");
                                     }
                                 }
-                                catch
+                                else
                                 {
-                                    Log.Information("No play button found on cloudnestra page");
+                                    Log.Information("No cloudnestra URLs found in the network traffic");
                                 }
-                            }
-                            else
-                            {
-                                Log.Information("No cloudnestra URLs found in the network traffic");
                             }
                         }
                         catch (Exception ex)
