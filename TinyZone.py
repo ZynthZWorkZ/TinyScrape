@@ -381,78 +381,82 @@ def get_movie_details(driver):
         return "", ""
 
 def check_play_icon(url, try_vlc=False, try_ffplay=False, watch_ffplay=False, headless=True):
-    # Set up Chrome options
-    chrome_options = Options()
-    if headless:
-        chrome_options.add_argument('--headless=new')  # Use new headless mode
-    chrome_options.add_argument('--window-size=1920,1080')  # Set window size
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')  # Set user agent
-    chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-web-security')
-    chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
-    chrome_options.add_argument('--disable-site-isolation-trials')
-    chrome_options.add_argument('--disable-blink-features=AutomationControlled')  # Hide automation
-    chrome_options.add_argument('--ignore-certificate-errors')  # Ignore SSL certificate errors
-    chrome_options.add_argument('--allow-insecure-localhost')  # Allow insecure localhost
-    chrome_options.add_argument('--disable-webgl')  # Disable WebGL to avoid the error
-    chrome_options.add_argument('--disable-extensions')  # Disable extensions
-    chrome_options.add_argument('--disable-popup-blocking')  # Disable popup blocking
-    chrome_options.add_argument('--disable-notifications')  # Disable notifications
-    chrome_options.add_argument('--disable-infobars')  # Disable infobars
-    chrome_options.add_argument('--disable-logging')  # Disable logging
-    chrome_options.add_argument('--disable-default-apps')  # Disable default apps
-    chrome_options.add_argument('--disable-translate')  # Disable translate
-    chrome_options.add_argument('--disable-sync')  # Disable sync
-    chrome_options.add_argument('--disable-background-networking')  # Disable background networking
-    chrome_options.add_argument('--disable-background-timer-throttling')  # Disable background timer throttling
-    chrome_options.add_argument('--disable-backgrounding-occluded-windows')  # Disable backgrounding occluded windows
-    chrome_options.add_argument('--disable-breakpad')  # Disable breakpad
-    chrome_options.add_argument('--disable-component-extensions-with-background-pages')  # Disable component extensions with background pages
-    chrome_options.add_argument('--disable-dev-tools')  # Disable developer tools
-    chrome_options.add_experimental_option('excludeSwitches', ['enable-automation', 'enable-logging'])  # Hide automation and logging
-    chrome_options.add_experimental_option('useAutomationExtension', False)  # Hide automation
-    
-    # Enable performance logging
-    chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-    
-    # Create a temporary directory for Chrome user data
-    temp_dir = tempfile.mkdtemp()
-    chrome_options.add_argument(f'--user-data-dir={temp_dir}')
-
-    # Initialize the Chrome WebDriver
-    driver = webdriver.Chrome(options=chrome_options)
-    
-    # Execute CDP commands to prevent detection
-    driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-        "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        "platform": "Windows",
-        "acceptLanguage": "en-US,en;q=0.9"
-    })
-    
-    # Additional anti-detection measures
-    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-        'source': '''
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => undefined
-            });
-            Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5]
-            });
-            Object.defineProperty(navigator, 'languages', {
-                get: () => ['en-US', 'en']
-            });
-            window.chrome = {
-                runtime: {}
-            };
-        '''
-    })
-    
-    # Enable network tracking
-    driver.execute_cdp_cmd('Network.enable', {})
+    driver = None
+    temp_dir = None
     
     try:
+        # Set up Chrome options
+        chrome_options = Options()
+        if headless:
+            chrome_options.add_argument('--headless=new')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-web-security')
+        chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+        chrome_options.add_argument('--disable-site-isolation-trials')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--allow-insecure-localhost')
+        chrome_options.add_argument('--disable-webgl')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-popup-blocking')
+        chrome_options.add_argument('--disable-notifications')
+        chrome_options.add_argument('--disable-infobars')
+        chrome_options.add_argument('--disable-logging')
+        chrome_options.add_argument('--disable-default-apps')
+        chrome_options.add_argument('--disable-translate')
+        chrome_options.add_argument('--disable-sync')
+        chrome_options.add_argument('--disable-background-networking')
+        chrome_options.add_argument('--disable-background-timer-throttling')
+        chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+        chrome_options.add_argument('--disable-breakpad')
+        chrome_options.add_argument('--disable-component-extensions-with-background-pages')
+        chrome_options.add_argument('--disable-dev-tools')
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-automation', 'enable-logging'])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        
+        # Enable performance logging
+        chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+        
+        # Create a temporary directory for Chrome user data
+        temp_dir = tempfile.mkdtemp()
+        chrome_options.add_argument(f'--user-data-dir={temp_dir}')
+
+        # Initialize the Chrome WebDriver with service
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        
+        # Execute CDP commands to prevent detection
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            "platform": "Windows",
+            "acceptLanguage": "en-US,en;q=0.9"
+        })
+        
+        # Additional anti-detection measures
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+                Object.defineProperty(navigator, 'plugins', {
+                    get: () => [1, 2, 3, 4, 5]
+                });
+                Object.defineProperty(navigator, 'languages', {
+                    get: () => ['en-US', 'en']
+                });
+                window.chrome = {
+                    runtime: {}
+                };
+            '''
+        })
+        
+        # Enable network tracking
+        driver.execute_cdp_cmd('Network.enable', {})
+        
         # Navigate to the URL
         driver.get(url)
         
@@ -566,13 +570,22 @@ def check_play_icon(url, try_vlc=False, try_ffplay=False, watch_ffplay=False, he
         logging.error(f"An error occurred: {str(e)}")
     
     finally:
-        # Close the browser
-        driver.quit()
-        # Clean up the temporary directory
-        try:
-            os.rmdir(temp_dir)
-        except:
-            pass
+        if driver:
+            try:
+                # Close all windows and quit the driver
+                driver.quit()
+            except Exception as e:
+                logging.debug(f"Error during browser cleanup: {str(e)}")
+            finally:
+                driver = None
+                
+        if temp_dir:
+            try:
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            except Exception as e:
+                logging.debug(f"Error during temp directory cleanup: {str(e)}")
+            finally:
+                temp_dir = None
 
 def process_movie_links(search_term=None, try_vlc=False, try_ffplay=False, watch_ffplay=False, headless=True, random_watch=False, roku_ip=None):
     """Process movie links from movie_links.txt file."""

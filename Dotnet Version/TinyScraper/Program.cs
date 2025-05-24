@@ -87,6 +87,43 @@ namespace TinyScraper
                 .CreateLogger();
         }
 
+        private static (string description, string genre) GetMovieDetails(IWebDriver driver)
+        {
+            try
+            {
+                // Get description
+                string description = "";
+                try
+                {
+                    var descElement = driver.FindElement(By.CssSelector("div.description"));
+                    description = descElement.Text.Trim();
+                }
+                catch
+                {
+                    Log.Information("Could not find movie description");
+                }
+
+                // Get genre
+                string genre = "";
+                try
+                {
+                    var genreElement = driver.FindElement(By.CssSelector(".col-xl-7.col-lg-7.col-md-8.col-sm-12"));
+                    genre = genreElement.Text.Trim();
+                }
+                catch
+                {
+                    Log.Information("Could not find movie genre");
+                }
+
+                return (description, genre);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error getting movie details");
+                return ("", "");
+            }
+        }
+
         private static async Task CheckPlayIcon(string url, bool tryVlc, bool tryFfplay, bool watchFfplay, bool headless)
         {
             var options = new ChromeOptions();
@@ -156,6 +193,20 @@ namespace TinyScraper
 
                     // Navigate to the URL
                     driver.Navigate().GoToUrl(url);
+                    
+                    // Get movie details
+                    var (description, genre) = GetMovieDetails(driver);
+                    if (!string.IsNullOrEmpty(description))
+                    {
+                        Log.Information("\nMovie Description:");
+                        Log.Information(description);
+                    }
+                    if (!string.IsNullOrEmpty(genre))
+                    {
+                        Log.Information("\nMovie Genre:");
+                        Log.Information(genre);
+                    }
+
                     var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
                     // Try to find the play icon using different possible selectors
