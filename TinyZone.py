@@ -356,6 +356,30 @@ def try_play_in_ffplay(video_links, watch=False):
     logging.info("Failed to verify any of the URLs with FFplay")
     return False
 
+def get_movie_details(driver):
+    """Get movie description and genre from the page."""
+    try:
+        # Get description
+        description = ""
+        try:
+            desc_element = driver.find_element(By.CSS_SELECTOR, "div.description")
+            description = desc_element.text.strip()
+        except:
+            logging.info("Could not find movie description")
+
+        # Get genre
+        genre = ""
+        try:
+            genre_element = driver.find_element(By.CSS_SELECTOR, ".col-xl-7.col-lg-7.col-md-8.col-sm-12")
+            genre = genre_element.text.strip()
+        except:
+            logging.info("Could not find movie genre")
+
+        return description, genre
+    except Exception as e:
+        logging.error(f"Error getting movie details: {str(e)}")
+        return "", ""
+
 def check_play_icon(url, try_vlc=False, try_ffplay=False, watch_ffplay=False, headless=True):
     # Set up Chrome options
     chrome_options = Options()
@@ -431,6 +455,15 @@ def check_play_icon(url, try_vlc=False, try_ffplay=False, watch_ffplay=False, he
     try:
         # Navigate to the URL
         driver.get(url)
+        
+        # Get movie details
+        description, genre = get_movie_details(driver)
+        if description:
+            logging.info("\nMovie Description:")
+            logging.info(description)
+        if genre:
+            logging.info("\nMovie Genre:")
+            logging.info(genre)
         
         # Wait for the page to load (wait up to 10 seconds)
         wait = WebDriverWait(driver, 10)

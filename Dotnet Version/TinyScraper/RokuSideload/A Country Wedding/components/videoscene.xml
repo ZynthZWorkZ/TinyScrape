@@ -1,0 +1,35 @@
+<?xml version = "1.0" encoding = "utf-8" ?> 
+
+<!--********** Copyright 2016 Roku Corp.  All Rights Reserved. **********-->
+
+<component name = "VideoExample" extends = "Scene" >
+
+  <script type = "text/brightscript" >
+
+    <![CDATA[
+
+    sub init()
+      videocontent = createObject("RoSGNode", "ContentNode")
+
+      videocontent.title = "A Country Wedding"
+      videocontent.streamformat = "hls"
+      videocontent.url = "https://tmstr1.shadowlandschronicles.com/pl/H4sIAAAAAAAAAw3N0XaCIBgA4FcSjJa7NGGndaSB8pPeoeBcSaM6K_Tp1wN858vWqMfIEdcP66436WbVdyYlGzQM6VsybN7bxT66mt4qj65mEbG8tE.biujUPbFLrhzYXY9GyYtP2sCkDQqxAUaglluJflPQre5Y_hQ.en1hpwMV2DK718C40iHUiy07HbUGWNUMUAfh1lZZfgC1qgB4DfkeLiP0p9bXlP.ZZCKKhsgx2_KCpk06_vSeRKm5kbpMGgxGYOJb9P14fd5N4eEUn.HD7kpKROWZNFgWHIeRYymcJw1f.NXRsFg8FVLfZ3FOZoOt7FSY6zPc1VHhdhmPFjfxUGVfFX2ZKceiTrJ_ZdTTU0EBAAA-/ea18a1816b821e1ba4ee5d4a76b0b7cf/index.m3u8"
+
+      video = m.top.findNode("exampleVideo")
+      video.content = videocontent
+
+      video.setFocus(true)
+      video.control = "play"
+    end sub
+
+    ]]>
+
+  </script>
+
+  <children >
+
+    <Video id = "exampleVideo"/>
+
+  </children>
+
+</component>

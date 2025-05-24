@@ -1,0 +1,35 @@
+<?xml version = "1.0" encoding = "utf-8" ?> 
+
+<!--********** Copyright 2016 Roku Corp.  All Rights Reserved. **********-->
+
+<component name = "VideoExample" extends = "Scene" >
+
+  <script type = "text/brightscript" >
+
+    <![CDATA[
+
+    sub init()
+      videocontent = createObject("RoSGNode", "ContentNode")
+
+      videocontent.title = "Enter The Dangerous Mind"
+      videocontent.streamformat = "hls"
+      videocontent.url = "https://tmstr2.shadowlandschronicles.com/pl/H4sIAAAAAAAAAw3N226DIAAA0F8CisvY29paL402IhflDUVjRa2JRtGv384PHPxFPPwNLojoBhsCUQOrtjUAtFhrDdufzIp3HiZeMkWw6kVSQYopwNgcZOXBBz3Px73mPkxHvjc3cuiTbwqVTk1UVYUC1II9mzrG_DVtLPEE_EXSNz17zPiVk82MJU4GAxvulkbEBy06W5_XLQ9cKAKnzXsVNVpcNYJDnSnVp.rZXTidr7tAj0X5wpYoXjkY9iSoNwEVTJHzZWhwBsuDTvMg7.apWZe_JJ01GL70jdzq4v.wnmOBGYUUnwzGTsvIvXgaiTCOuN_NfLKXJ9iBLNKQSthpjo8cuTPvr5xzsmQMkD.IfTjLQQEAAA--/4acba9caf1d8fee8b7e879b2743462cb/index.m3u8"
+
+      video = m.top.findNode("exampleVideo")
+      video.content = videocontent
+
+      video.setFocus(true)
+      video.control = "play"
+    end sub
+
+    ]]>
+
+  </script>
+
+  <children >
+
+    <Video id = "exampleVideo"/>
+
+  </children>
+
+</component>

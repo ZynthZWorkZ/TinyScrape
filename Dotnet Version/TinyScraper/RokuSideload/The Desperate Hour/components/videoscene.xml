@@ -1,0 +1,35 @@
+<?xml version = "1.0" encoding = "utf-8" ?> 
+
+<!--********** Copyright 2016 Roku Corp.  All Rights Reserved. **********-->
+
+<component name = "VideoExample" extends = "Scene" >
+
+  <script type = "text/brightscript" >
+
+    <![CDATA[
+
+    sub init()
+      videocontent = createObject("RoSGNode", "ContentNode")
+
+      videocontent.title = "The Desperate Hour"
+      videocontent.streamformat = "hls"
+      videocontent.url = "https://tmstr4.shadowlandschronicles.com/pl/H4sIAAAAAAAAAw3MzXKCMBRA4VcKCVjpkjaBgoRCknsxu2C0tOBPHe1Inr6uz3yHpEPiHWPkxfvVgR2i_Wrw5BAnZJ3ShLpXXUyhK0alDFifm1hH7QJ9Zwfa3dtgQZ8upS1GavN5U9F10giPDd565Jc3x8e66WF2XHw65NSF7m6E_9F8F2O.XexRiP0UPYUXdSglsJYOHFpVTGQ_Tw.Ds0IOcY3yz0c8kWhzaXiQfVb6d3HdHdMIp_ls2UfcMn83uSSWk2g3w9XhmiksmypkyjDDOmOnej4Hfyrx.X2223cVtmEg5W.t4VRRWAAftaUQa4DKHzu3YVnuii.KItNOZCvFL0EtabB6vA1Bnm0g6T_noIIIQQEAAA--/ed800195f02d6115ff2da9ca69bbc1b4/index.m3u8"
+
+      video = m.top.findNode("exampleVideo")
+      video.content = videocontent
+
+      video.setFocus(true)
+      video.control = "play"
+    end sub
+
+    ]]>
+
+  </script>
+
+  <children >
+
+    <Video id = "exampleVideo"/>
+
+  </children>
+
+</component>
