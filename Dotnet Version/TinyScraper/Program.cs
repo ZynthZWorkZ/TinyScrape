@@ -49,7 +49,7 @@ namespace TinyScraper
                     if (arguments.RokuSideload != null)
                     {
                         // Get movie details and video URL
-                        await CheckPlayIcon(arguments.Url, false, false, false, !arguments.Head);
+                        await CheckPlayIcon(arguments.Url, false, false, false, arguments.Head);
                         
                         if (m3u8Urls.Any())
                         {
@@ -403,7 +403,7 @@ namespace TinyScraper
                         if (!string.IsNullOrEmpty(rokuSideload))
                         {
                             // Process the movie URL for Roku sideloading
-                            await CheckPlayIcon(url, false, false, false, !headless);
+                            await CheckPlayIcon(url, false, false, false, headless);
                             if (m3u8Urls.Any())
                             {
                                 var videoUrl = m3u8Urls.First();
