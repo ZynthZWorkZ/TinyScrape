@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TinyScraper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+555601a57652ae594c69ec75eff5358f0365ecfe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d3cca3e77bd49ea0fba570820a271e8b6c1bd060")]
 [assembly: System.Reflection.AssemblyProductAttribute("TinyScraper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TinyScraper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

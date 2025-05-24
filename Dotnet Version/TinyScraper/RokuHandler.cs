@@ -8,6 +8,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using Serilog;
+using System.Text.RegularExpressions;
 
 namespace TinyScraper
 {
@@ -17,8 +18,11 @@ namespace TinyScraper
         {
             try
             {
+                // Sanitize the title for use in directory name
+                string sanitizedTitle = Regex.Replace(title, @"[<>:""/\\|?*']", "_");
+                
                 // Create a new directory for the app
-                string appDir = Path.Combine("RokuSideload", title.Replace(" ", "_"));
+                string appDir = Path.Combine("RokuSideload", sanitizedTitle);
                 if (!Directory.Exists(appDir))
                 {
                     Directory.CreateDirectory(appDir);
@@ -41,24 +45,13 @@ namespace TinyScraper
 
                 // Update videoscene.xml with title and URL
                 string videoscenePath = Path.Combine(appDir, "components", "videoscene.xml");
-                var doc = XDocument.Load(videoscenePath);
-                var root = doc.Root;
-                if (root != null)
-                {
-                    var titleElement = root.Descendants().FirstOrDefault(e => e.Value.Contains("videocontent.title"));
-                    var urlElement = root.Descendants().FirstOrDefault(e => e.Value.Contains("videocontent.url"));
-
-                    if (titleElement != null)
-                    {
-                        titleElement.Value = titleElement.Value.Replace("videocontent.title = \"\"", $"videocontent.title = \"{title}\"");
-                    }
-                    if (urlElement != null)
-                    {
-                        urlElement.Value = urlElement.Value.Replace("videocontent.url = \"\"", $"videocontent.url = \"{videoUrl}\"");
-                    }
-
-                    doc.Save(videoscenePath);
-                }
+                string content = File.ReadAllText(videoscenePath);
+                
+                // Update title and URL only, leave Video id unchanged
+                content = content.Replace("videocontent.title = \"\"", $"videocontent.title = \"{title}\"");
+                content = content.Replace("videocontent.url = \"\"", $"videocontent.url = \"{videoUrl}\"");
+                
+                File.WriteAllText(videoscenePath, content);
 
                 // Create zip file
                 string zipPath = $"{appDir}.zip";

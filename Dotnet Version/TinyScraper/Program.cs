@@ -42,14 +42,14 @@ namespace TinyScraper
 
                 if (arguments.Search != null)
                 {
-                    await ProcessMovieLinks(arguments.Search, arguments.Vlc, arguments.Ffplay, arguments.Watch, !arguments.Head, arguments.RandomWatch, arguments.RokuIp);
+                    await ProcessMovieLinks(arguments.Search, arguments.Vlc, arguments.Ffplay, arguments.Watch, !arguments.Head, arguments.RandomWatch, arguments.RokuSideload);
                 }
                 else if (arguments.Url != null)
                 {
                     if (arguments.RokuSideload != null)
                     {
                         // Get movie details and video URL
-                        await CheckPlayIcon(arguments.Url, arguments.Vlc, arguments.Ffplay, arguments.Watch, !arguments.Head);
+                        await CheckPlayIcon(arguments.Url, false, false, false, !arguments.Head);
                         
                         if (m3u8Urls.Any())
                         {
@@ -65,7 +65,7 @@ namespace TinyScraper
                 }
                 else
                 {
-                    await ProcessMovieLinks(null, arguments.Vlc, arguments.Ffplay, arguments.Watch, !arguments.Head, arguments.RandomWatch, arguments.RokuIp);
+                    await ProcessMovieLinks(null, arguments.Vlc, arguments.Ffplay, arguments.Watch, !arguments.Head, arguments.RandomWatch, arguments.RokuSideload);
                 }
             }
             catch (Exception ex)
@@ -364,7 +364,7 @@ namespace TinyScraper
             }
         }
 
-        private static async Task ProcessMovieLinks(string? searchTerm, bool tryVlc, bool tryFfplay, bool watchFfplay, bool headless, bool randomWatch, string? rokuIp)
+        private static async Task ProcessMovieLinks(string? searchTerm, bool tryVlc, bool tryFfplay, bool watchFfplay, bool headless, bool randomWatch, string? rokuSideload)
         {
             try
             {
@@ -400,14 +400,14 @@ namespace TinyScraper
                         Log.Information($"\nRandomly selected movie: {year} | {title}");
                         Log.Information($"URL: {url}");
 
-                        if (!string.IsNullOrEmpty(rokuIp))
+                        if (!string.IsNullOrEmpty(rokuSideload))
                         {
                             // Process the movie URL for Roku sideloading
-                            await CheckPlayIcon(url, false, false, false, headless);
+                            await CheckPlayIcon(url, false, false, false, !headless);
                             if (m3u8Urls.Any())
                             {
                                 var videoUrl = m3u8Urls.First();
-                                await RokuHandler.CreateRokuApp(title, videoUrl, rokuIp);
+                                await RokuHandler.CreateRokuApp(title, videoUrl, rokuSideload);
                             }
                         }
                         else
@@ -480,7 +480,6 @@ namespace TinyScraper
         public bool Head { get; private set; }
         public bool RandomWatch { get; private set; }
         public string? Search { get; private set; }
-        public string? RokuIp { get; private set; }
         public string? RokuSideload { get; private set; }
 
         public ArgumentParser Parse(string[] args)
