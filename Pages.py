@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 import os
+import argparse
 
 def load_existing_urls():
     """Load existing URLs from the file to avoid duplicates"""
@@ -21,7 +22,7 @@ def load_existing_urls():
                         existing_urls.add(url)
     return existing_urls
 
-def get_movie_links():
+def get_movie_links(include_images=False):
     # Set up Chrome options
     chrome_options = Options()
     chrome_options.add_argument('--headless')
@@ -41,7 +42,10 @@ def get_movie_links():
         file_mode = 'a' if os.path.exists('movie_links.txt') else 'w'
         with open('movie_links.txt', file_mode, encoding='utf-8') as f:
             if file_mode == 'w':
-                f.write("Year | Title | URL\n")
+                header = "Year | Title | URL"
+                if include_images:
+                    header += " | Image URL"
+                f.write(header + "\n")
                 f.write("-" * 50 + "\n")
             
             # Process all pages
@@ -97,8 +101,21 @@ def get_movie_links():
                                     if year_span:
                                         year = year_span.text.strip()
                                 
+                                # Get image URL if requested
+                                image_url = ""
+                                if include_images:
+                                    film_poster = item.find('div', class_='film-poster')
+                                    if film_poster:
+                                        img = film_poster.find('img')
+                                        if img:
+                                            image_url = img.get('data-src', img.get('src', ''))
+                                
                                 # Write to file
-                                f.write(f"{year} | {title_text} | {movie_url}\n")
+                                line = f"{year} | {title_text} | {movie_url}"
+                                if include_images:
+                                    line += f" | {image_url}"
+                                f.write(line + "\n")
+                                
                                 existing_urls.add(movie_url)
                                 new_movies += 1
                                 print(f"Added: {title_text} ({year})")
@@ -132,4 +149,8 @@ def get_movie_links():
             pass
 
 if __name__ == "__main__":
-    get_movie_links() 
+    parser = argparse.ArgumentParser(description='Scrape movie information from tinyzone.org')
+    parser.add_argument('-img', '--include-images', action='store_true', help='Include image URLs in the output')
+    args = parser.parse_args()
+    
+    get_movie_links(include_images=args.include_images) 
